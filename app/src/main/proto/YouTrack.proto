@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package name.peterbukhal.android.youtrack;
+
+option java_package = "name.peterbukhal.android.youtrack.proto";
+
+message Ping {
+
+    string provider = 1;
+    int64 time = 2;
+    double latitude = 3;
+    double longitude = 4;
+    double altitude = 5;
+    float speed = 6;
+    float bearing = 7;
+    float accuracy = 8;
+    string uid = 9;
+    bool mock = 10;
+}

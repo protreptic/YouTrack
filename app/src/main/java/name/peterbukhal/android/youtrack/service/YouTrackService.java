@@ -1,15 +1,18 @@
 package name.peterbukhal.android.youtrack.service;
 
+import android.Manifest;
 import android.app.Service;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.IBinder;
 import android.provider.Settings.Secure;
-import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -21,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import name.peterbukhal.android.youtrack.R;
 import name.peterbukhal.android.youtrack.proto.Ping;
 import name.peterbukhal.android.youtrack.util.impl.LocationListenerImpl;
 
@@ -40,7 +44,7 @@ public final class YouTrackService extends Service {
         private InetSocketAddress mInetSocketAddress;
         private DatagramSocket mSocket;
 
-        public YouTrackThread() throws IOException {
+        YouTrackThread() throws IOException {
             super("YouTrackThread");
 
             mInetSocketAddress = new InetSocketAddress(mServer, mPort);
@@ -55,36 +59,39 @@ public final class YouTrackService extends Service {
                 try {
                     final byte[] data;
 
-                    if (mOutput.equals(OUTPUT_PROTOBUF)) {
-                         data = new Ping.Builder()
-                                .provider(mLocation.getProvider())
-                                .time(mLocation.getTime())
-                                .latitude(mLocation.getLatitude())
-                                .longitude(mLocation.getLongitude())
-                                .altitude(mLocation.getAltitude())
-                                .speed(mLocation.getSpeed())
-                                .bearing(mLocation.getBearing())
-                                .accuracy(mLocation.getAccuracy())
-                                .uid(mAndroidId)
-                                .build()
-                                .encode();
-                    } else if (mOutput.equals(OUTPUT_JSON)) {
-                        name.peterbukhal.android.youtrack.json.Ping ping =
-                                new name.peterbukhal.android.youtrack.json.Ping(
-                                        mLocation.getProvider(), mLocation.getTime(),
-                                        mLocation.getLatitude(), mLocation.getLongitude(),
-                                        (float) mLocation.getAltitude(), mLocation.getSpeed(),
-                                        mLocation.getBearing(), mLocation.getAccuracy(),
-                                        mAndroidId, false);
+                    switch (mOutput) {
+                        case OUTPUT_PROTOBUF:
+                            data = new Ping.Builder()
+                                    .provider(mLocation.getProvider())
+                                    .time(mLocation.getTime())
+                                    .latitude(mLocation.getLatitude())
+                                    .longitude(mLocation.getLongitude())
+                                    .altitude(mLocation.getAltitude())
+                                    .speed(mLocation.getSpeed())
+                                    .bearing(mLocation.getBearing())
+                                    .accuracy(mLocation.getAccuracy())
+                                    .uid(mAndroidId)
+                                    .build()
+                                    .encode();
+                            break;
+                        case OUTPUT_JSON:
+                            name.peterbukhal.android.youtrack.json.Ping ping =
+                                    new name.peterbukhal.android.youtrack.json.Ping(
+                                            mLocation.getProvider(), mLocation.getTime(),
+                                            mLocation.getLatitude(), mLocation.getLongitude(),
+                                            (float) mLocation.getAltitude(), mLocation.getSpeed(),
+                                            mLocation.getBearing(), mLocation.getAccuracy(),
+                                            mAndroidId, false);
 
-                        data = new Gson()
-                                .toJson(ping)
-                                .getBytes();
-                    } else {
-                        stopSelf();
-                        interrupt();
+                            data = new Gson()
+                                    .toJson(ping)
+                                    .getBytes();
+                            break;
+                        default:
+                            stopSelf();
+                            interrupt();
 
-                        return;
+                            return;
                     }
 
                     final DatagramPacket sendPacket = new DatagramPacket(
@@ -93,7 +100,7 @@ public final class YouTrackService extends Service {
 
                     TimeUnit.SECONDS.sleep(mSendInterval);
                 } catch (Exception e) {
-                    Log.e(LOG_TAG, "", e);
+                    //
                 }
             }
         }
@@ -182,6 +189,16 @@ public final class YouTrackService extends Service {
         }
 
         try {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED
+                    && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                    != PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, R.string.no_location_permission, Toast.LENGTH_SHORT).show();
+                stopSelf();
+
+                return 0;
+            }
+
             if (mUseGps) {
                 mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,
                         mUpdateInterval * 1000, 0.0F, mGpsLocationListener);
@@ -208,6 +225,12 @@ public final class YouTrackService extends Service {
 
         try {
             mExecutor.shutdownNow();
+
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                return;
+            }
+
             mLocationManager.removeUpdates(mGpsLocationListener);
             mLocationManager.removeUpdates(mNetworkLocationListener);
         } catch (Exception e) {

@@ -1,9 +1,16 @@
 package name.peterbukhal.android.youtrack.activity;
 
+import android.Manifest;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
 import android.view.View;
@@ -91,6 +98,66 @@ public final class MainActivity extends AppCompatActivity {
                 ? "" : valueOf(mSharedPreferences.getInt(SHARED_PREFERENCES_KEY__UPDATE_INTERVAL, 0)));
         mCbUseGps.setChecked(mSharedPreferences.getBoolean(SHARED_PREFERENCES_KEY__USE_GPS, false));
         mCbUseNetwork.setChecked(mSharedPreferences.getBoolean(SHARED_PREFERENCES_KEY__USE_NETWORK, true));
+
+        init();
+    }
+
+    private void init() {
+        /**
+         * Проверяем есть ли доступ к точному местоположению, если есть то идем дальше,
+         * иначе запрашиваем разрешение у пользователя, если разрешение получено, то
+         * идем дальше, иначе выходим из приложения так как для дальнейшей работы
+         * обязательно требуется доступ к точному местоположению.
+         */
+        if (ContextCompat.checkSelfPermission(this,
+                Manifest.permission.ACCESS_FINE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this,
+                    Manifest.permission.ACCESS_FINE_LOCATION)) {
+                new AlertDialog.Builder(this)
+                        .setTitle(getString(R.string.attention))
+                        .setMessage(getString(R.string.request_permission_message, getString(R.string.location_service)))
+                        .setCancelable(false)
+                        .setPositiveButton(getString(R.string.yes), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                ActivityCompat.requestPermissions(MainActivity.this,
+                                        new String[] { Manifest.permission.ACCESS_FINE_LOCATION,
+                                                Manifest.permission.ACCESS_COARSE_LOCATION },
+                                        REQUEST_PERMISSION_LOCATION);
+                            }
+                        })
+                        .setNegativeButton(getString(R.string.exit), new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                finish();
+                            }
+                        })
+                        .create()
+                        .show();
+            } else {
+                ActivityCompat.requestPermissions(this,
+                        new String[] { Manifest.permission.ACCESS_FINE_LOCATION,
+                                Manifest.permission.ACCESS_COARSE_LOCATION },
+                        REQUEST_PERMISSION_LOCATION);
+            }
+        }
+    }
+
+    private static final int REQUEST_PERMISSION_LOCATION = 53212;
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case REQUEST_PERMISSION_LOCATION: {
+                if (grantResults.length > 0
+                        && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    init();
+                } else {
+                    finish();
+                }
+            } break;
+        }
     }
 
     private String mOutputType = OUTPUT_PROTOBUF;
@@ -106,7 +173,7 @@ public final class MainActivity extends AppCompatActivity {
             final String outputType = mOutputType;
 
             if (TextUtils.isEmpty(serverName) || serverPort <= 0) {
-                Toast.makeText(this, "Задайте адрес и порт сервера", Toast.LENGTH_LONG).show();
+                Toast.makeText(this, R.string.set_server_and_port, Toast.LENGTH_LONG).show();
 
                 return;
             }

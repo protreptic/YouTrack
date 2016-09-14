@@ -9,4 +9,11 @@
     <string name="network">Network</string>
     <string name="json">json</string>
     <string name="protobuf">protobuf</string>
+    <string name="exit">Выйти</string>
+    <string name="attention">Внимание</string>
+    <string name="yes">Да</string>
+    <string name="request_permission_message">Для работы приложения требуется доступ к %s. Предоставить разрешение?</string>
+    <string name="location_service">службе точного местоположения</string>
+    <string name="set_server_and_port">Задайте адрес и порт сервера</string>
+    <string name="no_location_permission">Нет доступа к службе точного местоположения. Не возможно запустить службу!</string>
 </resources>

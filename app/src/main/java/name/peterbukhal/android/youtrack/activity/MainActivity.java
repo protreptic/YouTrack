@@ -24,6 +24,8 @@ import static name.peterbukhal.android.youtrack.service.YouTrackService.EXTRA_SE
 import static name.peterbukhal.android.youtrack.service.YouTrackService.EXTRA_UPDATE_INTERVAL;
 import static name.peterbukhal.android.youtrack.service.YouTrackService.EXTRA_USE_GPS;
 import static name.peterbukhal.android.youtrack.service.YouTrackService.EXTRA_USE_NETWORK;
+import static name.peterbukhal.android.youtrack.service.YouTrackService.OUTPUT_JSON;
+import static name.peterbukhal.android.youtrack.service.YouTrackService.OUTPUT_PROTOBUF;
 
 /**
  * Created on 13/09/16 by
@@ -63,6 +65,20 @@ public final class MainActivity extends AppCompatActivity {
         mCbUseGps = (CheckBox) findViewById(R.id.gps_provider);
         mCbUseNetwork = (CheckBox) findViewById(R.id.network_provider);
         mRgOutputType = (RadioGroup) findViewById(R.id.output_type);
+        mRgOutputType.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+
+            @Override
+            public void onCheckedChanged(RadioGroup group, int checkedId) {
+                switch (checkedId) {
+                    case R.id.output_type_protobuf:
+                        mOutputType = OUTPUT_PROTOBUF;
+                        break;
+                    case R.id.output_type_json:
+                        mOutputType = OUTPUT_JSON;
+                        break;
+                }
+            }
+        });
 
         mSharedPreferences = getSharedPreferences("main", MODE_PRIVATE);
 
@@ -77,6 +93,8 @@ public final class MainActivity extends AppCompatActivity {
         mCbUseNetwork.setChecked(mSharedPreferences.getBoolean(SHARED_PREFERENCES_KEY__USE_NETWORK, true));
     }
 
+    private String mOutputType = OUTPUT_PROTOBUF;
+
     public void onLaunchClicked(View view) {
         if (((ToggleButton) view).isChecked()) {
             final String serverName = mEtServerName.getText().toString();
@@ -85,7 +103,7 @@ public final class MainActivity extends AppCompatActivity {
             final int updateInterval = Integer.valueOf(mEtUpdateInterval.getText().toString());
             final boolean useGps = mCbUseGps.isChecked();
             final boolean useNetwork = mCbUseNetwork.isChecked();
-            final String outputType = "protobuf";
+            final String outputType = mOutputType;
 
             if (TextUtils.isEmpty(serverName) || serverPort <= 0) {
                 Toast.makeText(this, "Задайте адрес и порт сервера", Toast.LENGTH_LONG).show();

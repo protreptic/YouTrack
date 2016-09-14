@@ -86,7 +86,8 @@
                 android:id="@+id/output_type_protobuf"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/protobuf" />
+                android:text="@string/protobuf"
+                android:checked="true" />
 
             <RadioButton
                 android:id="@+id/output_type_json"

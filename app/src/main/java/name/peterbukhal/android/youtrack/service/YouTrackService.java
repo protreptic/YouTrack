@@ -55,7 +55,7 @@ public final class YouTrackService extends Service {
                 try {
                     final byte[] data;
 
-                    if (mOutput.equals("protobuf")) {
+                    if (mOutput.equals(OUTPUT_PROTOBUF)) {
                          data = new Ping.Builder()
                                 .provider(mLocation.getProvider())
                                 .time(mLocation.getTime())
@@ -68,7 +68,7 @@ public final class YouTrackService extends Service {
                                 .uid(mAndroidId)
                                 .build()
                                 .encode();
-                    } else if (mOutput.equals("json")) {
+                    } else if (mOutput.equals(OUTPUT_JSON)) {
                         name.peterbukhal.android.youtrack.json.Ping ping =
                                 new name.peterbukhal.android.youtrack.json.Ping(
                                         mLocation.getProvider(), mLocation.getTime(),
@@ -125,6 +125,9 @@ public final class YouTrackService extends Service {
     public static final String EXTRA_USE_GPS = "extra_use_gps";
     public static final String EXTRA_USE_NETWORK = "extra_use_network";
     public static final String EXTRA_OUTPUT = "extra_output";
+
+    public static final String OUTPUT_PROTOBUF = "protobuf";
+    public static final String OUTPUT_JSON = "json";
 
     @Override
     public void onCreate() {

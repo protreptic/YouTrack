@@ -15,20 +15,24 @@ import name.peterbukhal.android.youtrack.proto.Ping;
  */
 public final class YouTrackServer {
 
-    public static void main(String args[]) throws Exception {
+    public static void main(String arguments[]) throws Exception {
         int port = 9876;
         int bufferSize = 1024;
         int inputType = 0;
 
-        for (int index = 0; index <= args.length - 1; index++) {
-            String arg = args[index];
+        for (int index = 0; index <= arguments.length - 1; index++) {
+            final String argument = arguments[index];
 
-            if (arg.equals("--port")) {
-                port = Integer.valueOf(args[index + 1]);
-            } else if (arg.equals("--buffer-size")) {
-                bufferSize = Integer.valueOf(args[index + 1]);
-            } else if (arg.equals("--input-type")) {
-                inputType = args[index + 1].equals("json") ? 1 : 0;
+            switch (argument) {
+                case "--port":
+                    port = Integer.valueOf(arguments[index + 1]);
+                    break;
+                case "--buffer-size":
+                    bufferSize = Integer.valueOf(arguments[index + 1]);
+                    break;
+                case "--input-type":
+                    inputType = arguments[index + 1].equals("json") ? 1 : 0;
+                    break;
             }
         }
 
@@ -54,7 +58,7 @@ public final class YouTrackServer {
                     } break;
                 }
             } catch (Exception e) {
-                System.out.println("Decode error");
+                System.out.println("Message decode error or wrong input type");
             }
         }
     }
